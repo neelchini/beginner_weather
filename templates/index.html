@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌤️ Weather App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="weather-card">
+            <h1>🌤️ Weather App</h1>
+            <p class="subtitle">Get current weather for any city</p>
+            
+            <div class="search-container">
+                <input type="text" id="cityInput" placeholder="Enter city name..." autocomplete="off">
+                <button onclick="getWeather()">Search</button>
+            </div>
+            
+            <div id="weatherResult" class="weather-result hidden">
+                <!-- Weather data will be displayed here -->
+            </div>
+            
+            <div id="errorMessage" class="error-message hidden">
+                <!-- Error messages will be displayed here -->
+            </div>
+            
+            <div class="examples">
+                <p>Try: London, New York, Tokyo, Paris, Delhi</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getWeather() {
+            const city = document.getElementById('cityInput').value.trim();
+            const weatherResult = document.getElementById('weatherResult');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Hide previous results
+            weatherResult.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            
+            if (!city) {
+                showError('Please enter a city name');
+                return;
+            }
+            
+            // Show loading state
+            weatherResult.innerHTML = '<div class="loading">⏳ Fetching weather data...</div>';
+            weatherResult.classList.remove('hidden');
+            
+            fetch('/weather', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ city: city })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    displayWeather(data);
+                }
+            })
+            .catch(error => {
+                showError('Network error: ' + error.message);
+            });
+        }
+        
+        function displayWeather(data) {
+            const weatherResult = document.getElementById('weatherResult');
+            
+            // Get weather icon URL
+            const iconUrl = `http://openweathermap.org/img/wn/${data.icon}@2x.png`;
+            
+            weatherResult.innerHTML = `
+                <div class="weather-header">
+                    <h2>${data.city}, ${data.country}</h2>
+                    <img src="${iconUrl}" alt="${data.description}" class="weather-icon">
+                </div>
+                <div class="weather-info">
+                    <div class="temperature">${data.temperature}°C</div>
+                    <div class="description">${data.description}</div>
+                    <div class="details">
+                        <div class="detail-item">
+                            <span class="label">Feels like:</span>
+                            <span class="value">${data.feels_like}°C</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Humidity:</span>
+                            <span class="value">${data.humidity}%</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Wind Speed:</span>
+                            <span class="value">${data.wind_speed} m/s</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            weatherResult.classList.remove('hidden');
+        }
+        
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.innerHTML = `<div class="error">❌ ${message}</div>`;
+            errorMessage.classList.remove('hidden');
+            
+            // Hide weather result if showing
+            document.getElementById('weatherResult').classList.add('hidden');
+        }
+        
+        // Allow pressing Enter to search
+        document.getElementById('cityInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                getWeather();
+            }
+        });
+    </script>
+</body>
+</html>
