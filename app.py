@@ -18,7 +18,6 @@ class WeatherApp:
         if not self.api_key:
             return {'error': 'API key not configured'}
         
-        # Remove any quotes from the city name
         city_name = city_name.strip('"\'')
         
         params = {
@@ -39,7 +38,6 @@ class WeatherApp:
                 
             data = response.json()
             
-            # Format the response
             return {
                 'city': data['name'],
                 'country': data['sys']['country'],
@@ -56,7 +54,6 @@ class WeatherApp:
         except Exception as e:
             return {'error': f'Error fetching weather data: {str(e)}'}
 
-# Initialize weather app
 weather_app = WeatherApp()
 
 @app.route('/')
@@ -73,4 +70,4 @@ def get_weather():
     return jsonify(weather_data)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)
